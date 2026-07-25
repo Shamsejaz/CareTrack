@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { UserPlus, ShieldPlus } from 'lucide-react';
@@ -17,7 +17,7 @@ const signupSchema = z.object({
         .regex(/[0-9]/, 'Password must contain at least one number')
         .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
     consent: z.literal(true, {
-        errorMap: () => ({ message: 'You must agree to the Privacy Policy and data processing terms.' })
+        message: 'You must agree to the Privacy Policy and data processing terms.'
     })
 });
 
