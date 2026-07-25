@@ -404,3 +404,69 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+[functions.generate-ai-nudges]
+enabled = true
+verify_jwt = true
+import_map = "./functions/generate-ai-nudges/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/generate-ai-nudges/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/generate-ai-nudges/*.html" ]
+
+[functions.ai-chat-mediator]
+enabled = true
+verify_jwt = true
+import_map = "./functions/ai-chat-mediator/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/ai-chat-mediator/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/ai-chat-mediator/*.html" ]
+
+[functions.ai-voice-assistant]
+enabled = true
+verify_jwt = true
+import_map = "./functions/ai-voice-assistant/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/ai-voice-assistant/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/ai-voice-assistant/*.html" ]
+
+[functions.iot-ingestion]
+enabled = true
+verify_jwt = true
+import_map = "./functions/iot-ingestion/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/iot-ingestion/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/iot-ingestion/*.html" ]
+
+[functions.robotics-dispatch]
+enabled = true
+verify_jwt = true
+import_map = "./functions/robotics-dispatch/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/robotics-dispatch/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/robotics-dispatch/*.html" ]
+
+[functions.robotics-webhook]
+enabled = true
+verify_jwt = true
+import_map = "./functions/robotics-webhook/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/robotics-webhook/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/robotics-webhook/*.html" ]

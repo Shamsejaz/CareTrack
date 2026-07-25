@@ -35,3 +35,9 @@
 - `[ ]` Design API contracts for ingesting device telemetry (FHIR/JSON).
 - `[ ]` Implement secure webhook listeners for device payloads.
 - `[ ]` Route anomalous readings through Gemini for real-time risk assessment.
+
+## Phase 7: Home Robotics API Integration
+**Goal:** Establish backend infrastructure to dispatch and monitor physical tasks.
+- [ ] Design API contracts for dispatching assistance commands.
+- [ ] Implement secure webhook listeners for robotics telemetry and status updates.
+- [ ] Add robotics status monitoring to the Caregiver dashboard.

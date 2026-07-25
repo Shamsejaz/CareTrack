@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Brain, Bell, Activity, Utensils, Pill, Users, Smartphone, Sparkles, ArrowRight } from "lucide-react";
+import { Brain, Bell, Activity, Utensils, Pill, Users, Smartphone, Sparkles, ArrowRight, Mic, Bot } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Reveal } from "@/components/site/Reveal";
@@ -27,6 +27,8 @@ const sections = [
   { i: Pill, t: "Medicine Management", d: "Auto-scheduled doses, missed-dose tracking, and refills before you run out.", bullets: ["Auto schedule", "Missed dose tracking", "Refill reminders"] },
   { i: Users, t: "Caregiver Support", d: "Real-time alerts and remote monitoring keep families connected and informed.", bullets: ["Real-time alerts", "Remote monitoring", "Multi-user access"] },
   { i: Smartphone, t: "Device Integration", d: "Pairs beautifully with wearables and smart health devices you already trust.", bullets: ["Wearables", "Smart glucometers", "BP monitors"] },
+  { i: Mic, t: "Conversational Voice", d: "Push-to-Talk voice assistant that understands natural language to log health events.", bullets: ["Push-to-Talk", "Natural language", "Effortless logging"] },
+  { i: Bot, t: "Home Robotics", d: "Dispatch physical tasks to home assistive robots directly from your app.", bullets: ["Task dispatch", "Real-time tracking", "Caregiver dashboard sync"] },
 ];
 
 function FeaturesPage() {

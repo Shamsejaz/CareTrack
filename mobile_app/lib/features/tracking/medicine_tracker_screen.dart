@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/api_client.dart';
 import '../dashboard/providers/dashboard_provider.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/utils/error_handler.dart';
+import 'prescription_review_screen.dart';
 
 class MedicineTrackerScreen extends ConsumerStatefulWidget {
   const MedicineTrackerScreen({super.key});
@@ -46,6 +48,46 @@ class _MedicineTrackerScreenState extends ConsumerState<MedicineTrackerScreen> {
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Error logging medicine', e);
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _processPrescription(XFile photo) async {
+    setState(() => _isSaving = true);
+    try {
+      final bytes = await photo.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      
+      final supabase = ref.read(supabaseProvider);
+      
+      final response = await supabase.functions.invoke(
+        'process-prescription',
+        body: {
+          'base64Image': base64Image,
+          'mimeType': 'image/jpeg',
+        },
+      );
+      
+      if (response.status == 200) {
+        final data = response.data['data'];
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => PrescriptionReviewScreen(
+                medications: data['medicines'] ?? [],
+                warnings: data['warnings'] ?? [],
+              ),
+            ),
+          );
+        }
+      } else {
+        throw Exception(response.data['error'] ?? 'Unknown error');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Error parsing prescription', e);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -311,7 +353,7 @@ class _MedicineTrackerScreenState extends ConsumerState<MedicineTrackerScreen> {
               imageQuality: 50,
             );
             if (photo != null) {
-              _logMedicine('photo');
+              await _processPrescription(photo);
             }
           },
           style: ElevatedButton.styleFrom(

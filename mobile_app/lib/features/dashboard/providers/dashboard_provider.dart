@@ -10,6 +10,10 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
     // Return realistic mock data for Demo Mode
     return {
       'isCaregiver': false,
+      'ai_insight': {
+          'text': 'Blood sugar has been trending down steadily over the last 3 days.',
+          'severity': 'Positive'
+      },
       'sugar': { 
           'lastReading': '105',
           'status': 'Normal'
@@ -94,9 +98,27 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
             .limit(1)
             .maybeSingle();
 
+        final insightRes = await supabase
+            .from('ai_insights')
+            .select()
+            .eq('patient_id', patient['id'])
+            .order('created_at', ascending: false)
+            .limit(1)
+            .maybeSingle();
+
+        final robotTaskRes = await supabase
+            .from('robot_tasks')
+            .select()
+            .eq('patient_id', patient['id'])
+            .order('created_at', ascending: false)
+            .limit(1)
+            .maybeSingle();
+
         patientsWithLogs.add({
           ...patient,
           'latest_log': latestLogRes,
+          'ai_insight': insightRes,
+          'robot_task': robotTaskRes,
         });
       }
 
@@ -124,6 +146,14 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
         .eq('patient_id', user.id)
         .gte('created_at', startOfDay.toIso8601String());
 
+    final insightRes = await supabase
+        .from('ai_insights')
+        .select()
+        .eq('patient_id', user.id)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
     final List<Map<String, dynamic>> logs = (response as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
 
     // Aggregate statistics
@@ -145,6 +175,10 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 
     return {
       'isCaregiver': false,
+      'ai_insight': insightRes != null ? {
+          'text': insightRes['insight_text'],
+          'severity': insightRes['severity']
+      } : null,
       'sugar': { 
           'lastReading': latestSugar?['value'] ?? '--',
           'status': latestSugar?['intervention_alert']?['severity'] ?? 'Normal'

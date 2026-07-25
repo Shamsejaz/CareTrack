@@ -7,6 +7,7 @@ import 'providers/dashboard_provider.dart';
 import '../profile/providers/profile_provider.dart';
 import '../../core/utils/error_handler.dart';
 import '../../core/providers/auth_provider.dart';
+import '../voice/voice_overlay.dart';
 import 'dart:math';
 
 class DashboardScreen extends ConsumerWidget {
@@ -32,6 +33,25 @@ class DashboardScreen extends ConsumerWidget {
         loading: () => const SizedBox.shrink(),
         error: (err, stack) => const SizedBox.shrink(),
       ),
+      floatingActionButton: dashboardDataAsync.when(
+        data: (data) => data['isCaregiver'] == true
+            ? const SizedBox.shrink()
+            : FloatingActionButton.large(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (context) => const VoiceAssistantOverlay(),
+                  );
+                },
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: const Icon(Icons.mic_rounded, color: Colors.white, size: 36),
+              ),
+        loading: () => const SizedBox.shrink(),
+        error: (err, stack) => const SizedBox.shrink(),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -83,6 +103,10 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           _buildHeroGreeting(context, ref),
           const SizedBox(height: 32),
+          if (data['ai_insight'] != null) ...[
+             _buildAiNudgeCard(context, data['ai_insight']),
+             const SizedBox(height: 32),
+          ],
           _buildVitalsGrid(context, data),
           const SizedBox(height: 48),
           _buildQuickActions(context),
@@ -529,6 +553,62 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildAiNudgeCard(BuildContext context, Map insight) {
+    final text = insight['text'] ?? '';
+    final severity = insight['severity'] ?? 'Neutral';
+
+    Color bgColor = Theme.of(context).colorScheme.primaryContainer;
+    Color fgColor = Theme.of(context).colorScheme.onPrimaryContainer;
+    IconData icon = Icons.lightbulb_outline_rounded;
+
+    if (severity == 'Warning' || severity == 'Critical') {
+      bgColor = Theme.of(context).colorScheme.errorContainer;
+      fgColor = Theme.of(context).colorScheme.onErrorContainer;
+      icon = Icons.warning_amber_rounded;
+    } else if (severity == 'Positive') {
+      bgColor = Colors.green.shade100;
+      fgColor = Colors.green.shade800;
+      icon = Icons.trending_up_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: fgColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome_rounded, size: 14, color: fgColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      'AI Health Insight',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: fgColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  text,
+                  style: TextStyle(color: fgColor, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCaregiverNote(BuildContext context) {
     return Column(
       children: [
@@ -776,6 +856,7 @@ class DashboardScreen extends ConsumerWidget {
                 final fullName = patient['full_name'] ?? 'Anonymous Patient';
                 final List conditions = patient['conditions'] ?? [];
                 final latestLog = patient['latest_log'];
+                final aiInsight = patient['ai_insight'];
                 
                 String latestVitalsText = 'No readings logged today.';
                 if (latestLog != null) {
@@ -825,6 +906,11 @@ class DashboardScreen extends ConsumerWidget {
                           ],
                         ),
                         
+                        if (aiInsight != null) ...[
+                          const SizedBox(height: 16),
+                          _buildAiNudgeCard(context, aiInsight),
+                        ],
+                        
                         // Conditions Chips
                         if (conditions.isNotEmpty) ...[
                           const SizedBox(height: 12),
@@ -844,6 +930,31 @@ class DashboardScreen extends ConsumerWidget {
                                 ),
                               );
                             }).toList(),
+                          ),
+                        ],
+                        
+                        if (patient['robot_task'] != null) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.smart_toy_rounded, 
+                                  size: 16, 
+                                  color: patient['robot_task']['status'] == 'in_progress' ? Colors.blue : Colors.grey,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Robot Task: ${patient['robot_task']['task_type']} (${patient['robot_task']['status']})',
+                                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                         

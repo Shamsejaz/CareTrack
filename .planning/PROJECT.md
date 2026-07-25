@@ -25,6 +25,8 @@ Enables production-ready AI healthcare companion features, reducing manual data 
 - [ ] Build multimodal prescription OCR for PDF/PNG scans with drug interaction checks
 - [ ] Create daily cron-triggered AI health nudges for caregivers
 - [ ] Integrate background LLM chat mediator for critical symptom alerts
+- [ ] Build conversational voice interface for accessible health logging
+- [ ] Design API contracts and integrations for home robotics assistance
 
 ### Out of Scope
 - [General Diagnosis] — App is not a replacement for clinical diagnosis or a primary healthcare provider.

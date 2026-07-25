@@ -120,6 +120,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       itemBuilder: (context, index) {
         final message = reversedMessages[index];
         final isMe = message['sender_id'] == currentUserId;
+        final isSystem = message['is_system'] == true;
+        
+        if (isSystem) {
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+               color: Theme.of(context).colorScheme.errorContainer,
+               borderRadius: BorderRadius.circular(12),
+               border: Border.all(color: Theme.of(context).colorScheme.error.withOpacity(0.3))
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message['content'], 
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    )
+                  )
+                ),
+              ]
+            )
+          );
+        }
         
         return Align(
           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
