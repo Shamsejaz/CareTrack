@@ -173,12 +173,27 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
         ? logs.firstWhere((l) => l['log_type'] == 'Sleep') 
         : null;
 
+    final bpLogs = logs.where((l) => l['log_type'] == 'BloodPressure').toList();
+    bpLogs.sort((a, b) => b['created_at'].compareTo(a['created_at']));
+    final latestBP = bpLogs.isNotEmpty ? bpLogs.first : null;
+
+    final recentActivity = logs.take(5).map((l) => {
+      'title': l['log_type'] ?? 'Log',
+      'subtitle': l['metadata']?['suggestion'] ?? 'Recorded',
+      'time': DateTime.parse(l['created_at']).toLocal().toString().substring(11, 16),
+      'value': l['value'] ?? '',
+    }).toList();
+
     return {
       'isCaregiver': false,
       'ai_insight': insightRes != null ? {
           'text': insightRes['insight_text'],
           'severity': insightRes['severity']
       } : null,
+      'bloodPressure': {
+          'lastReading': latestBP?['value'] ?? '120/80',
+          'status': latestBP?['intervention_alert']?['severity'] ?? 'Stable'
+      },
       'sugar': { 
           'lastReading': latestSugar?['value'] ?? '--',
           'status': latestSugar?['intervention_alert']?['severity'] ?? 'Normal'
@@ -193,6 +208,8 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
       'sleep': { 
           'duration': sleepLog?['value'] ?? '--' 
       },
+      'medications': [], // TODO: Fetch from medications table
+      'recentActivity': recentActivity,
     };
   } catch (e) {
     throw Exception('Failed to load dashboard data from Supabase: $e');

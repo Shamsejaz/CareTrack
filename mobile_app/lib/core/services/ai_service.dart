@@ -26,4 +26,23 @@ class AIService {
       };
     }
   }
+  static Future<Map<String, dynamic>> processPrescription(Uint8List imageBytes) async {
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'process-prescription',
+        body: {'imageBase64': base64Encode(imageBytes)},
+      );
+
+      final data = response.data;
+      if (data == null) throw Exception('Empty response from AI Edge Function');
+
+      return data as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Prescription Analysis Error: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to process prescription image.',
+      };
+    }
+  }
 }

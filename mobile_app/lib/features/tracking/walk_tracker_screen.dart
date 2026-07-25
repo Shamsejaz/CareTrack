@@ -3,11 +3,45 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../dashboard/providers/dashboard_provider.dart';
 import '../../core/providers/auth_provider.dart';
+import '../../core/services/health_service.dart';
 
-class WalkTrackerScreen extends ConsumerWidget {
+class WalkTrackerScreen extends ConsumerStatefulWidget {
   const WalkTrackerScreen({super.key});
 
-  Future<void> _logWalk(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<WalkTrackerScreen> createState() => _WalkTrackerScreenState();
+}
+
+class _WalkTrackerScreenState extends ConsumerState<WalkTrackerScreen> {
+  final TextEditingController _stepsController = TextEditingController();
+  bool _isSyncing = false;
+
+  Future<void> _syncHealthData() async {
+    setState(() => _isSyncing = true);
+    
+    final steps = await HealthService.getTodaySteps();
+    
+    if (mounted) {
+      setState(() {
+        _isSyncing = false;
+        if (steps > 0) {
+          _stepsController.text = steps.toString();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Synced $steps steps from Health Connect / Apple Health!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No steps found or permissions not granted.')),
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _logWalk(BuildContext context) async {
+    final stepsStr = _stepsController.text.trim();
+    if (stepsStr.isEmpty) return;
+    
     try {
       final supabase = ref.read(supabaseProvider);
       final user = ref.read(currentUserProvider);
@@ -17,7 +51,7 @@ class WalkTrackerScreen extends ConsumerWidget {
       await supabase.from('health_logs').insert({
         'patient_id': user.id,
         'log_type': 'Walk',
-        'value': '1500', // Mock data for now
+        'value': stepsStr,
         'manual_confirm': true,
       });
 
@@ -39,7 +73,13 @@ class WalkTrackerScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _stepsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Activity Tracker')),
       body: SafeArea(
@@ -52,8 +92,18 @@ class WalkTrackerScreen extends ConsumerWidget {
               const SizedBox(height: 48),
               _buildSyncOptions(context),
               const Spacer(),
+              TextField(
+                controller: _stepsController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Steps taken',
+                  hintText: 'e.g. 2000',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => _logWalk(context, ref),
+                onPressed: () => _logWalk(context),
                 child: const Text('Confirm & Log Action'),
               ),
             ],
@@ -64,6 +114,11 @@ class WalkTrackerScreen extends ConsumerWidget {
   }
 
   Widget _buildStats(BuildContext context) {
+    final dashDataAsync = ref.watch(dashboardDataProvider);
+    final dashData = dashDataAsync.value;
+    final currentSteps = dashData?['steps']?['current'] ?? 0;
+    final goalSteps = dashData?['steps']?['goal'] ?? 5000;
+
     return Column(
       children: [
         Container(
@@ -82,7 +137,7 @@ class WalkTrackerScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          '3,450 / 5,000',
+          '${currentSteps.toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), ',')} / ${goalSteps.toString().replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), ',')}',
           style: Theme.of(context).textTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue),
           textAlign: TextAlign.center,
         ),
@@ -99,8 +154,10 @@ class WalkTrackerScreen extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.sync_rounded),
           title: const Text('Sync with Google Fit / Health'),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () {},
+          trailing: _isSyncing 
+              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.chevron_right_rounded),
+          onTap: _isSyncing ? null : _syncHealthData,
           tileColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade300)),
         ),

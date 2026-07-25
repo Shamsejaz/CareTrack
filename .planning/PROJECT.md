@@ -1,10 +1,10 @@
 # CareTrack AI & LLM Integration
 
 ## What This Is
-Integrating Google Gemini LLMs across the CareTrack ecosystem to provide live multimodal OCR, automated caregiver insights, and intelligent care team chat mediation, while moving API execution to secure Supabase Edge Functions.
+Enforcing production readiness by removing all frontend mocks and simulated logic. Achieving complete feature parity with the marketing website by building Caregiver Support, IoT Device Sync, and Home Robotics API integrations.
 
 ## Core Value
-Enables production-ready AI healthcare companion features, reducing manual data entry for prescriptions, proactively alerting caregivers to health trends, and ensuring patient safety via chat monitoring.
+Ensures CareTrack operates as a secure, real-world enterprise application compliant with `AGENTS.md` (no mocks), and fulfills all advertised features to users.
 
 ## Key Decisions
 | Decision | Rationale | Outcome |
@@ -14,19 +14,25 @@ Enables production-ready AI healthcare companion features, reducing manual data 
 | Daily cron job for insights | Prevent overloading the LLM on every page load | Pending |
 | Background chat agent | Intercept dangerous patient messages instantly | Pending |
 
+| Anti-Mock Enforcement | Remove `DemoMode` and `Future.delayed` | Active |
+| Caregiver Table Linking | Link `patient_id` to `caregiver_id` securely | Pending |
+| Native IoT Sync Plugins | Use HealthKit/Health Connect to sync pedometer | Pending |
+
 ## Requirements
 
 ### Validated
 - ✓ [Mobile Food Analysis] — existing
 - ✓ [Simulated Edge Functions] — existing
+- ✓ [Secure Server-Side LLM Execution] — Milestone 1
+- ✓ [Multimodal Prescription OCR] — Milestone 1
+- ✓ [Conversational Voice Interface] — Milestone 1
 
 ### Active
-- [ ] Implement secure Edge Functions for LLM requests with Supabase Vault integration
-- [ ] Build multimodal prescription OCR for PDF/PNG scans with drug interaction checks
-- [ ] Create daily cron-triggered AI health nudges for caregivers
-- [ ] Integrate background LLM chat mediator for critical symptom alerts
-- [ ] Build conversational voice interface for accessible health logging
-- [ ] Design API contracts and integrations for home robotics assistance
+- [x] Connect `vitals_dashboard_screen` and trackers to real Supabase `health_logs` tables
+- [x] Remove `Future.delayed` mocks and integrate real Edge Function HTTP calls for AI parsing
+- [x] Build Care Team UI and link patients to caregivers in Supabase
+- [x] Implement HealthKit/HealthConnect plugins for device syncing
+- [x] Build Home Robotics webhook dispatch via Edge Functions
 
 ### Out of Scope
 - [General Diagnosis] — App is not a replacement for clinical diagnosis or a primary healthcare provider.

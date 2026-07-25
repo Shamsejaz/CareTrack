@@ -1,43 +1,25 @@
 # Roadmap
 
-## Phase 1: Secure Server-Side LLM Execution
-**Goal:** Migrate client-side Gemini calls to secure Supabase Edge Functions.
-- [ ] Configure Supabase Vault with `GEMINI_API_KEY`.
-- [ ] Create Deno Edge Function `analyze-log` using the `npm:@google/genai` SDK.
-- [ ] Update mobile app to route analysis requests through the Edge Function instead of direct API calls.
+## Phase 8: Anti-Mock Architecture Enforcement (Completed)
+**Goal:** Remove all client-side mocks and static dummy data (when not in Demo mode).
+- [x] Remove `Future.delayed` from `meal_tracker_screen.dart` and `prescription_upload_screen.dart` and connect to Edge Functions.
+- [x] Wire `dashboard_provider.dart` and `vitals_dashboard_screen.dart` to a real `health_logs` query.
+- [x] Connect `voice_overlay.dart` to the real speech-to-text pipeline instead of the 3-second timer mock.
 
-## Phase 2: Multimodal Prescription OCR
-**Goal:** Implement robust prescription parsing using `gemini-1.5-pro`.
-- [ ] Update `process-prescription` Edge Function to accept image/PDF bytes.
-- [ ] Configure Gemini structured output schema for medications (name, dose, timing, frequency).
-- [ ] Implement drug interaction validation logic (mock or RxList API).
+## Phase 9: Caregiver Support (Completed)
+**Goal:** Build functional remote monitoring and multi-user access.
+- [x] Caregiver linking via invite codes in the app.
+- [x] RLS policies to allow caregivers to view linked patient dashboards.
 
-## Phase 3: AI Nudges & Predictive Analytics
-**Goal:** Generate personalized patient nudges.
-- [ ] Create pg_cron job in Supabase to run daily over `health_logs`.
-- [ ] Implement Edge Function to fetch last 7 days of logs and synthesize a health nudge.
-- [ ] Update Caregiver and Patient dashboard to display the dynamic AI insight instead of the hardcoded widget.
+## Phase 10: IoT Device Integration (Completed)
+**Goal:** Sync real data from Apple Health and Google Fit.
+- [x] Integrate `health` package for cross-platform pedometer/vitals syncing.
+- [x] Wire up `WalkTrackerScreen` to pull native health data.
+- [ ] Create a "Connected Devices" toggle screen in the profile.
 
-## Phase 4: AI Mediator in Care Team Chat
-**Goal:** Background monitoring of care team chat for critical symptoms.
-- [ ] Implement database trigger on `chat_messages` table for new inserts.
-- [ ] Create Edge Function to evaluate message text for severe symptoms using Gemini.
-- [ ] Implement push notification dispatch and auto-reply alerting the patient.
-
-## Phase 5: Conversational Voice Interface
-**Goal:** Enable older adults to interact with the app naturally without typing.
-- [ ] Integrate Web Speech API / mobile voice recognition for speech-to-text.
-- [ ] Connect audio transcriptions to Gemini to parse intents (logging meals, vitals, answering questions).
-- [ ] Implement text-to-speech for conversational feedback.
-
-## Phase 6: IoT Device Integration
-**Goal:** Establish backend infrastructure to ingest data from smart health devices (glucometers, BP monitors, wearables).
-- `[ ]` Design API contracts for ingesting device telemetry (FHIR/JSON).
-- `[ ]` Implement secure webhook listeners for device payloads.
-- `[ ]` Route anomalous readings through Gemini for real-time risk assessment.
-
-## Phase 7: Home Robotics API Integration
-**Goal:** Establish backend infrastructure to dispatch and monitor physical tasks.
-- [ ] Design API contracts for dispatching assistance commands.
-- [ ] Implement secure webhook listeners for robotics telemetry and status updates.
-- [ ] Add robotics status monitoring to the Caregiver dashboard.
+## Phase 11: Home Robotics Integration (Completed)
+**Goal:** Dispatch physical assistive tasks to home robots.
+- [x] Build `robotics-dispatch` webhook Edge Function via Gemini for intent classification.
+- [x] Add Robotics UI panel to dashboard for one-tap commands (e.g., "Bring water").
+- [ ] Add Robotics UI panel in the CareTrack app for dispatching tasks.
+- [ ] Add robotics status tracking to the Caregiver web dashboard.

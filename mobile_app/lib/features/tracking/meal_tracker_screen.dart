@@ -40,12 +40,7 @@ class _MealTrackerScreenState extends ConsumerState<MealTrackerScreen> {
         _isAnalyzing = true;
       });
 
-      // Simulate AI Analysis
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _isAnalyzing = false;
-      });
+      // Call AI Analysis directly without artificial mock delay
       await _analyzeMeal(photo);
     }
   }

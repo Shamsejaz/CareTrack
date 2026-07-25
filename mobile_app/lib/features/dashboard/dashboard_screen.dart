@@ -8,6 +8,7 @@ import '../profile/providers/profile_provider.dart';
 import '../../core/utils/error_handler.dart';
 import '../../core/providers/auth_provider.dart';
 import '../voice/voice_overlay.dart';
+import 'robotics_panel.dart';
 import 'dart:math';
 
 class DashboardScreen extends ConsumerWidget {
@@ -108,6 +109,8 @@ class DashboardScreen extends ConsumerWidget {
              const SizedBox(height: 32),
           ],
           _buildVitalsGrid(context, data),
+          const SizedBox(height: 32),
+          const RoboticsPanel(),
           const SizedBox(height: 48),
           _buildQuickActions(context),
           const SizedBox(height: 48),

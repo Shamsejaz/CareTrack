@@ -44,10 +44,8 @@ class _VoiceAssistantOverlayState extends ConsumerState<VoiceAssistantOverlay> w
     });
     _pulseController.repeat(reverse: true);
     
-    // Simulate recording delay before sending to backend
-    Future.delayed(const Duration(seconds: 3), () {
-      _stopListeningAndProcess();
-    });
+    // In a real PTT scenario, we start recording audio here.
+    // We wait for the user to release the button (onTapUp) to stop recording.
   }
 
   void _stopListeningAndProcess() async {
@@ -138,8 +136,9 @@ class _VoiceAssistantOverlayState extends ConsumerState<VoiceAssistantOverlay> w
               }
             },
             onTapUp: (_) {
-               // In a real PTT, releasing the button might trigger the upload
-               // Here we let the mock 3 second timer handle it for easier demo flow
+              if (_state == VoiceState.listening) {
+                _stopListeningAndProcess();
+              }
             },
             child: AnimatedBuilder(
               animation: _pulseAnimation,

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import '../../core/services/ai_service.dart';
+import '../../core/utils/error_handler.dart';
 
 class PrescriptionUploadScreen extends StatefulWidget {
   const PrescriptionUploadScreen({super.key});
@@ -11,15 +16,37 @@ class PrescriptionUploadScreen extends StatefulWidget {
 class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
   bool _isAnalyzing = false;
 
-  void _simulateUpload() async {
-    setState(() => _isAnalyzing = true);
-    
-    // Simulate AI parsing delay
-    await Future.delayed(const Duration(seconds: 2));
-    
-    if (mounted) {
-      setState(() => _isAnalyzing = false);
-      context.push('/setup/prescription/review');
+  final ImagePicker _picker = ImagePicker();
+
+  void _pickAndUploadImage(ImageSource source) async {
+    try {
+      final XFile? photo = await _picker.pickImage(
+        source: (kIsWeb || (!kIsWeb && Platform.isWindows)) ? ImageSource.gallery : source,
+        imageQuality: 70,
+      );
+
+      if (photo != null) {
+        setState(() => _isAnalyzing = true);
+        
+        final bytes = await photo.readAsBytes();
+        final result = await AIService.processPrescription(bytes);
+
+        if (mounted) {
+          setState(() => _isAnalyzing = false);
+          
+          if (result['status'] == 'error') {
+            showErrorSnackBar(context, 'Analysis Failed', result['message'] ?? 'Could not parse prescription.');
+          } else {
+            // In a real app we'd pass the parsed meds to the next screen via extra or a provider
+            context.push('/setup/prescription/review', extra: result);
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+        showErrorSnackBar(context, 'Error uploading image', e);
+      }
     }
   }
 
@@ -145,7 +172,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: _simulateUpload,
+          onTap: () => _pickAndUploadImage(ImageSource.camera),
           borderRadius: BorderRadius.circular(32),
           child: Container(
             padding: const EdgeInsets.all(40),
@@ -205,6 +232,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
             iconBg: Theme.of(context).colorScheme.tertiaryContainer, // mapped from tertiary-fixed
             title: 'Upload PDF',
             sub: 'Digital files or scans',
+            onTap: () => _pickAndUploadImage(ImageSource.gallery),
           ),
         ),
         const SizedBox(width: 16),
@@ -216,6 +244,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
             iconBg: Theme.of(context).colorScheme.secondaryContainer,
             title: 'Browse Gallery',
             sub: 'Select from camera roll',
+            onTap: () => _pickAndUploadImage(ImageSource.gallery),
           ),
         ),
       ],
@@ -228,9 +257,10 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
     required Color iconBg,
     required String title,
     required String sub,
+    required VoidCallback onTap,
   }) {
     return InkWell(
-      onTap: _simulateUpload,
+      onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),

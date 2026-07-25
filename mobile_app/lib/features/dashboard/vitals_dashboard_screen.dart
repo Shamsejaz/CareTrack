@@ -4,6 +4,7 @@ import '../../core/widgets/bento_card.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
 import 'package:go_router/go_router.dart';
 import '../profile/providers/profile_provider.dart';
+import 'providers/dashboard_provider.dart';
 
 class VitalsDashboardScreen extends ConsumerWidget {
   const VitalsDashboardScreen({super.key});
@@ -49,11 +50,11 @@ class VitalsDashboardScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildHero(context, ref),
             const SizedBox(height: 32),
-            _buildVitalsGrid(context),
+            _buildVitalsGrid(context, ref),
             const SizedBox(height: 32),
             _buildAsymmetricInsight(context),
             const SizedBox(height: 48),
-            _buildRecentActivity(context),
+            _buildRecentActivity(context, ref),
           ],
         ),
       ),
@@ -108,14 +109,14 @@ class VitalsDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildVitalsGrid(BuildContext context) {
+  Widget _buildVitalsGrid(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         Row(
           children: [
             Expanded(
               flex: 2,
-              child: _buildBloodPressureCard(context),
+              child: _buildBloodPressureCard(context, ref),
             ),
           ],
         ),
@@ -145,7 +146,12 @@ class VitalsDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBloodPressureCard(BuildContext context) {
+  Widget _buildBloodPressureCard(BuildContext context, WidgetRef ref) {
+    final dashDataAsync = ref.watch(dashboardDataProvider);
+    final dashData = dashDataAsync.value;
+    final bpReading = dashData?['bloodPressure']?['lastReading'] ?? '120/80';
+    final bpStatus = dashData?['bloodPressure']?['status'] ?? 'Stable';
+
     return BentoCard(
       height: 200,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
@@ -180,7 +186,7 @@ class VitalsDashboardScreen extends ConsumerWidget {
                   Icon(Icons.trending_flat_rounded, color: Theme.of(context).colorScheme.secondary, size: 16),
                   const SizedBox(width: 4),
                   Text(
-                    'Stable',
+                    bpStatus,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                           color: Theme.of(context).colorScheme.secondary,
                         ),
@@ -197,7 +203,7 @@ class VitalsDashboardScreen extends ConsumerWidget {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  '120/80',
+                  bpReading,
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: Theme.of(context).colorScheme.onSurface,
@@ -227,7 +233,7 @@ class VitalsDashboardScreen extends ConsumerWidget {
               clipBehavior: Clip.none,
               children: [
                 Positioned(
-                  left: 150, // Mock dot position
+                  left: 150, // We could dynamically calculate this based on systolic reading, but keeping it fixed for UI stability for now
                   child: Container(
                     width: 12,
                     height: 12,
@@ -389,7 +395,10 @@ class VitalsDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentActivity(BuildContext context) {
+  Widget _buildRecentActivity(BuildContext context, WidgetRef ref) {
+    final dashDataAsync = ref.watch(dashboardDataProvider);
+    final dashData = dashDataAsync.value;
+    final recentActivity = dashData?['recentActivity'] as List? ?? [];
     return Container(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.fromLTRB(16, 32, 16, 32),
@@ -434,9 +443,21 @@ class VitalsDashboardScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 24),
-          _buildLogItem(context, '08:30 AM', 'Morning Routine', 'Taken after breakfast', '120/80', Theme.of(context).colorScheme.secondary),
-          const SizedBox(height: 16),
-          _buildLogItem(context, '09:15 PM', 'Evening Check', 'Manual entry', '122/82', Theme.of(context).colorScheme.secondary),
+          if (recentActivity.isEmpty)
+            const Text('No recent activity logged.', style: TextStyle(color: Colors.grey)),
+          ...recentActivity.map((activity) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildLogItem(
+                context,
+                activity['time'] ?? '--',
+                activity['title'] ?? 'Log',
+                activity['subtitle'] ?? '',
+                activity['value'] ?? '',
+                Theme.of(context).colorScheme.secondary,
+              ),
+            );
+          }).toList(),
         ],
       ),
     );
