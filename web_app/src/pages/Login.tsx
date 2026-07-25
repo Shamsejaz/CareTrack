@@ -61,7 +61,7 @@ export default function Login() {
                         <label>Email Address</label>
                         <input
                             type="email"
-                            placeholder="doc@caretrack.com"
+                            placeholder="doc@caretrackai.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
