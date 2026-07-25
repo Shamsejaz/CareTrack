@@ -88,7 +88,7 @@ function ContactPage() {
               </div>
             </div>
           ))}
-          <a href="https://wa.me/966500000000" target="_blank" rel="noreferrer" className="block rounded-2xl bg-amber-soft p-6 text-deep-green hover:opacity-90 transition">
+          <a href="https://wa.me/13075335472" target="_blank" rel="noreferrer" className="block rounded-2xl bg-amber-soft p-6 text-deep-green hover:opacity-90 transition">
             <p className="font-semibold">Prefer WhatsApp?</p>
             <p className="text-sm mt-1 opacity-80">Tap to chat with our team in seconds.</p>
           </a>
