@@ -23,3 +23,15 @@
 - [ ] Implement database trigger on `chat_messages` table for new inserts.
 - [ ] Create Edge Function to evaluate message text for severe symptoms using Gemini.
 - [ ] Implement push notification dispatch and auto-reply alerting the patient.
+
+## Phase 5: Conversational Voice Interface
+**Goal:** Enable older adults to interact with the app naturally without typing.
+- [ ] Integrate Web Speech API / mobile voice recognition for speech-to-text.
+- [ ] Connect audio transcriptions to Gemini to parse intents (logging meals, vitals, answering questions).
+- [ ] Implement text-to-speech for conversational feedback.
+
+## Phase 6: IoT Device Integration
+**Goal:** Establish backend infrastructure to ingest data from smart health devices (glucometers, BP monitors, wearables).
+- `[ ]` Design API contracts for ingesting device telemetry (FHIR/JSON).
+- `[ ]` Implement secure webhook listeners for device payloads.
+- `[ ]` Route anomalous readings through Gemini for real-time risk assessment.
