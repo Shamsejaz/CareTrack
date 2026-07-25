@@ -44,7 +44,7 @@ export function Header() {
         <div className="hidden lg:flex items-center gap-3">
           <LanguageSelector />
           <Button asChild size="sm" className="rounded-full px-5">
-            <Link to="/contact">{t("nav.startFree")}</Link>
+            <a href={import.meta.env.VITE_WEB_APP_URL ? `${import.meta.env.VITE_WEB_APP_URL}/signup` : "http://localhost:5173/signup"}>{t("nav.startFree")}</a>
           </Button>
         </div>
 
@@ -74,7 +74,7 @@ export function Header() {
               </Link>
             ))}
             <Button asChild className="mt-3 rounded-full">
-              <Link to="/contact" onClick={() => setOpen(false)}>{t("nav.startFree")}</Link>
+              <a href={import.meta.env.VITE_WEB_APP_URL ? `${import.meta.env.VITE_WEB_APP_URL}/signup` : "http://localhost:5173/signup"} onClick={() => setOpen(false)}>{t("nav.startFree")}</a>
             </Button>
           </div>
         </div>

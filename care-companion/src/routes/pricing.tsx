@@ -103,7 +103,7 @@ function PricingPage() {
                 <span className={`text-sm ${p.featured ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{p.sub}</span>
               </div>
               <Button asChild className={`mt-6 w-full rounded-full ${p.featured ? "bg-amber-soft text-deep-green hover:bg-amber-soft/90" : ""}`} variant={p.featured ? "default" : "outline"}>
-                <Link to="/contact">{p.cta}</Link>
+                <a href={`${import.meta.env.VITE_WEB_APP_URL || 'http://localhost:5173'}/signup?plan=${p.name.toLowerCase()}`}>{p.cta}</a>
               </Button>
               <ul className="mt-8 space-y-3">
                 {p.features.map((f) => (

@@ -1,8 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
-class SubscriptionScreen extends StatelessWidget {
+class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
+
+  @override
+  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  bool _isLoading = false;
+
+  Future<void> _handlePurchase(String packageId) async {
+    setState(() => _isLoading = true);
+    try {
+      // In a real implementation you would fetch the Offerings and pass the actual Package
+      // Here we simulate the process for the dummy integration
+      // final offerings = await Purchases.getOfferings();
+      // final package = offerings.current?.availablePackages.firstWhere((p) => p.identifier == packageId);
+      // await Purchases.purchasePackage(package!);
+      
+      // Simulating a network call
+      await Future.delayed(const Duration(seconds: 1));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Purchase simulation successful!')),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Purchase failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +235,13 @@ class SubscriptionScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _isLoading || buttonText == 'Get Started' ? null : () {
+                      if (buttonText.contains('Family')) {
+                        _handlePurchase('family');
+                      } else {
+                        _handlePurchase('premium');
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isPopular ? const Color(0xFFFFE4C4) : colorScheme.surfaceContainerHigh,
                       foregroundColor: isPopular ? const Color(0xFF1E3A8A) : colorScheme.onSurface,

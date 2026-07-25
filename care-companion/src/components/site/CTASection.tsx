@@ -16,10 +16,10 @@ export function CTASection() {
           <p className="mt-4 text-primary-foreground/80 max-w-xl mx-auto">{t("cta.body")}</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="rounded-full bg-amber-soft text-deep-green hover:bg-amber-soft/90 px-7">
-              <Link to="/contact">{t("cta.start")} <ArrowRight className="ml-1 size-4" /></Link>
+              <a href={import.meta.env.VITE_WEB_APP_URL ? `${import.meta.env.VITE_WEB_APP_URL}/signup` : "http://localhost:5173/signup"}>{t("cta.start")} <ArrowRight className="ml-1 size-4" /></a>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground px-7">
-              <Link to="/clinics">{t("cta.demo")}</Link>
+              <Link to="/contact">{t("cta.demo")}</Link>
             </Button>
           </div>
         </div>

@@ -6,6 +6,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { createServerFn } from "@tanstack/react-start";
+import { Resend } from "resend";
+
+const sendContactEmail = createServerFn({ method: "POST" })
+  .validator((data: { name: string; email: string; role: string; message: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      // In a real app, you would have a verified domain.
+      // For now, Resend's testing domain is used for demonstration.
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: 'CareTrackAI <onboarding@resend.dev>',
+        to: 'hello@caretrackai.app',
+        subject: `New Contact Request from ${data.name}`,
+        html: `
+          <h3>New Contact Request</h3>
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Role:</strong> ${data.role}</p>
+          <p><strong>Message:</strong><br/> ${data.message}</p>
+        `,
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      return { success: false, error: "Failed to send message" };
+    }
+  });
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -21,6 +49,28 @@ export const Route = createFileRoute("/contact")({
 
 function ContactPage() {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      role: formData.get("role") as string,
+      message: formData.get("message") as string,
+    };
+    
+    const res = await sendContactEmail({ data });
+    setLoading(false);
+    if (res.success) {
+      setSent(true);
+    } else {
+      alert("Something went wrong. Please try again or use WhatsApp.");
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -45,7 +95,7 @@ function ContactPage() {
               <p className="mt-2 text-muted-foreground">We'll be in touch shortly.</p>
             </div>
           ) : (
-            <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="contact-name" className="text-sm font-medium">Full name</label>
@@ -69,7 +119,9 @@ function ContactPage() {
                 <label htmlFor="contact-message" className="text-sm font-medium">How can we help?</label>
                 <Textarea id="contact-message" name="message" required className="mt-1.5 rounded-xl min-h-32" placeholder="Tell us a little about what you need…" />
               </div>
-              <Button size="lg" className="rounded-full px-7 w-full sm:w-auto">Send message</Button>
+              <Button size="lg" className="rounded-full px-7 w-full sm:w-auto" disabled={loading}>
+                {loading ? "Sending..." : "Send message"}
+              </Button>
             </form>
           )}
         </div>

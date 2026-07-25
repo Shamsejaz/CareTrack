@@ -430,3 +430,12 @@ body {
   text-decoration: underline;
 }
 
+.billing-container { padding: 2rem; max-width: 1000px; margin: 0 auto; }
+.current-plan { margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); }
+.pricing-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+.plan-card { padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
+.plan-card.active { border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-color); }
+.plan-card .price { font-size: 2rem; font-weight: bold; margin: 1rem 0; color: var(--text-color); }
+.plan-card ul { list-style: none; padding: 0; margin: 0 0 2rem 0; flex-grow: 1; }
+.plan-card li { margin-bottom: 0.5rem; color: var(--text-muted); }
+.plan-card li::before { content: '✓'; color: var(--primary-color); margin-right: 0.5rem; }

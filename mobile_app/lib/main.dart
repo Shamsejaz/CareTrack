@@ -33,6 +33,8 @@ import 'features/auth/login_screen.dart';
 
 
 import 'core/services/notification_service.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,6 +58,29 @@ void main() async {
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
     );
+  }
+
+  // Initialize RevenueCat
+  try {
+    await Purchases.setLogLevel(LogLevel.debug);
+    
+    // Replace with your real API keys
+    PurchasesConfiguration configuration;
+    if (Platform.isAndroid) {
+      configuration = PurchasesConfiguration('goog_dummy_key');
+    } else {
+      configuration = PurchasesConfiguration('appl_dummy_key');
+    }
+    
+    await Purchases.configure(configuration);
+    
+    // Attempt to log in to RevenueCat if the user is already authenticated in Supabase
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      await Purchases.logIn(session.user.id);
+    }
+  } catch (e) {
+    debugPrint('RevenueCat initialization failed: $e');
   }
 
   runApp(

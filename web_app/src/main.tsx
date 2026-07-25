@@ -9,6 +9,7 @@ import Patients from './pages/Patients'
 import Alerts from './pages/Alerts'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import Billing from './pages/Billing'
 
 function App() {
   const [session, setSession] = useState<any>(null);
@@ -48,6 +49,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/patients" element={<Patients />} />
           <Route path="/alerts" element={<Alerts />} />
+          <Route path="/billing" element={<Billing />} />
         </Route>
       </Routes>
     </BrowserRouter>
