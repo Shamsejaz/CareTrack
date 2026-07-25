@@ -44,9 +44,17 @@ void main() async {
     Supabase.instance;
   } catch (e) {
     // If it throws, it's not initialized yet
+    const String supabaseUrl = String.fromEnvironment(
+      'SUPABASE_URL',
+      defaultValue: 'https://svuruefzexxbyetpbixh.supabase.co',
+    );
+    const String supabaseAnonKey = String.fromEnvironment(
+      'SUPABASE_ANON_KEY',
+      defaultValue: 'sb_publishable_OvFPaFXN3LA78Xbqqza9uA_MgcYP8jY',
+    );
     await Supabase.initialize(
-      url: 'https://svuruefzexxbyetpbixh.supabase.co',
-      anonKey: 'sb_publishable_OvFPaFXN3LA78Xbqqza9uA_MgcYP8jY',
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
     );
   }
 

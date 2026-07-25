@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/auth_provider.dart';
+import '../../core/utils/error_handler.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -17,21 +18,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
 
   Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty) {
+      showErrorSnackBar(context, 'Validation failed', Exception('Please enter your email address.'));
+      return;
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      showErrorSnackBar(context, 'Validation failed', Exception('Please enter a valid email address.'));
+      return;
+    }
+    if (password.isEmpty) {
+      showErrorSnackBar(context, 'Validation failed', Exception('Please enter your password.'));
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final response = await Supabase.instance.client.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        email: email,
+        password: password,
       );
       
       if (response.user != null) {
         if (mounted) context.go('/dashboard');
       }
+    } on AuthException catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Login failed', e);
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e'), backgroundColor: Colors.red),
-        );
+        showErrorSnackBar(context, 'Login failed', e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -46,9 +65,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google Sign-In failed: $e'), backgroundColor: Colors.red),
-        );
+        showErrorSnackBar(context, 'Google Sign-In failed', e);
       }
     }
   }
@@ -61,9 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Apple Sign-In failed: $e'), backgroundColor: Colors.red),
-        );
+        showErrorSnackBar(context, 'Apple Sign-In failed', e);
       }
     }
   }

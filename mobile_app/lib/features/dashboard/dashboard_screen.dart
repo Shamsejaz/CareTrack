@@ -5,6 +5,8 @@ import '../../core/widgets/bento_card.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
 import 'providers/dashboard_provider.dart';
 import '../profile/providers/profile_provider.dart';
+import '../../core/utils/error_handler.dart';
+import '../../core/providers/auth_provider.dart';
 import 'dart:math';
 
 class DashboardScreen extends ConsumerWidget {
@@ -23,7 +25,13 @@ class DashboardScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 0),
+      bottomNavigationBar: dashboardDataAsync.when(
+        data: (data) => data['isCaregiver'] == true
+            ? const SizedBox.shrink()
+            : const CustomBottomNav(currentIndex: 0),
+        loading: () => const SizedBox.shrink(),
+        error: (err, stack) => const SizedBox.shrink(),
+      ),
     );
   }
 
@@ -64,6 +72,10 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Widget _buildBody(BuildContext context, WidgetRef ref, Map data) {
+    if (data['isCaregiver'] == true) {
+      return _buildCaregiverDashboard(context, ref, data);
+    }
+
     return SafeArea(
       bottom: false,
       child: ListView(
@@ -587,6 +599,542 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildCaregiverDashboard(BuildContext context, WidgetRef ref, Map data) {
+    final List patients = data['patients'] ?? [];
+    final int pendingAlerts = data['pendingAlerts'] ?? 0;
+
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Clinical Overview',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Real-time patient diagnostics and care portal',
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          
+          // Stats Row
+          Row(
+            children: [
+              Expanded(
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Total Patients', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                            Icon(Icons.people_rounded, color: Theme.of(context).colorScheme.primary),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '${patients.length}',
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text('Active Monitored', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: pendingAlerts > 0
+                        ? const BorderSide(color: Color(0xFFD32F2F), width: 1.5)
+                        : BorderSide.none,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Pending Alerts', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: pendingAlerts > 0 ? const Color(0xFFD32F2F) : Colors.orange,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '$pendingAlerts',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: pendingAlerts > 0 ? const Color(0xFFD32F2F) : null,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          pendingAlerts > 0 ? 'Action Required' : 'All Clear',
+                          style: TextStyle(
+                            color: pendingAlerts > 0 ? const Color(0xFFD32F2F) : Colors.grey,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Linked Patients Directory',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              TextButton.icon(
+                onPressed: () => _showAddPatientDialog(context, ref),
+                icon: const Icon(Icons.add_circle_outline_rounded),
+                label: const Text('Add Patient'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          if (patients.isEmpty)
+            Card(
+              elevation: 0,
+              color: Colors.grey.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 48.0, horizontal: 24),
+                child: Column(
+                  children: [
+                    const Icon(Icons.person_add_disabled_rounded, size: 48, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No patients linked yet.',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please click "Add Patient" and type the 6-digit patient code to begin monitoring.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: patients.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final patient = patients[index];
+                final patientId = patient['id'];
+                final fullName = patient['full_name'] ?? 'Anonymous Patient';
+                final List conditions = patient['conditions'] ?? [];
+                final latestLog = patient['latest_log'];
+                
+                String latestVitalsText = 'No readings logged today.';
+                if (latestLog != null) {
+                  final logType = latestLog['log_type'] ?? '';
+                  final val = latestLog['value'] ?? '';
+                  latestVitalsText = 'Latest: $val ($logType)';
+                }
+
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                              child: Text(
+                                fullName[0].toUpperCase(),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    fullName,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    latestVitalsText,
+                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        // Conditions Chips
+                        if (conditions.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: conditions.map((c) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.shade50,
+                                  borderRadius: BorderRadius.circular(9999),
+                                ),
+                                child: Text(
+                                  c.toString(),
+                                  style: TextStyle(color: Colors.indigo.shade700, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        
+                        const SizedBox(height: 16),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        
+                        // Action row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () => context.push('/chat/$patientId'),
+                              icon: Icon(Icons.chat_bubble_outline_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+                              label: const Text('Open Chat'),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton.icon(
+                              onPressed: () => _showPatientHistorySheet(context, ref, patientId, fullName),
+                              icon: const Icon(Icons.history_toggle_off_rounded, size: 18),
+                              label: const Text('View History'),
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showAddPatientDialog(BuildContext context, WidgetRef ref) async {
+    final codeController = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Link New Patient'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Enter the 6-digit invitation code generated by the patient on their mobile app.',
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: codeController,
+                    autofocus: true,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 8,
+                    ),
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      hintText: '000000',
+                      border: OutlineInputBorder(),
+                      counterText: '',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting ? null : () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          final code = codeController.text.trim();
+                          if (code.length != 6) {
+                            showErrorSnackBar(context, 'Validation failed', Exception('Please enter a 6-digit code.'));
+                            return;
+                          }
+
+                          setState(() => isSubmitting = true);
+
+                          try {
+                            final supabase = ref.read(supabaseProvider);
+                            final user = ref.read(currentUserProvider);
+
+                            if (user == null) throw Exception('Caregiver not authenticated');
+
+                            // 1. Fetch invitation code details
+                            final codeResponse = await supabase
+                                .from('invitation_codes')
+                                .select('*')
+                                .eq('code', code)
+                                .maybeSingle();
+
+                            if (codeResponse == null) {
+                              throw Exception('Invalid or expired invitation code.');
+                            }
+
+                            // Check expiration
+                            final expiresAt = DateTime.parse(codeResponse['expires_at']);
+                            if (expiresAt.isBefore(DateTime.now())) {
+                              throw Exception('This invitation code has expired.');
+                            }
+
+                            final patientId = codeResponse['patient_id'];
+
+                            // 2. Check if already linked
+                            final existingLink = await supabase
+                                .from('care_links')
+                                .select('*')
+                                .eq('patient_id', patientId)
+                                .eq('caregiver_id', user.id)
+                                .maybeSingle();
+
+                            if (existingLink != null) {
+                              throw Exception('This patient is already linked to your profile.');
+                            }
+
+                            // 3. Create care link
+                            await supabase.from('care_links').insert({
+                              'patient_id': patientId,
+                              'caregiver_id': user.id,
+                              'role': 'caregiver',
+                              'status': 'active',
+                            });
+
+                            // 4. Delete the used code
+                            await supabase
+                                .from('invitation_codes')
+                                .delete()
+                                .eq('code', code);
+
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Patient linked successfully!')),
+                              );
+                              ref.invalidate(dashboardDataProvider);
+                            }
+                          } catch (e) {
+                            if (dialogContext.mounted) {
+                              showErrorSnackBar(context, 'Linking failed', e);
+                            }
+                          } finally {
+                            setState(() => isSubmitting = false);
+                          }
+                        },
+                  child: isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text('Link Patient'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showPatientHistorySheet(BuildContext context, WidgetRef ref, String patientId, String patientName) async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: () async {
+            final supabase = ref.read(supabaseProvider);
+            final response = await supabase
+                .from('health_logs')
+                .select('*')
+                .eq('patient_id', patientId)
+                .order('created_at', ascending: false)
+                .limit(10);
+            return (response as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          }(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 300,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return Container(
+                height: 300,
+                padding: const EdgeInsets.all(24),
+                child: Center(child: Text('Error loading history: ${snapshot.error}')),
+              );
+            }
+            final logs = snapshot.data ?? [];
+            return Container(
+              padding: const EdgeInsets.all(24),
+              height: 450,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$patientName\'s History',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: logs.isEmpty
+                        ? const Center(child: Text('No health readings logged yet.', style: TextStyle(color: Colors.grey)))
+                        : ListView.separated(
+                            itemCount: logs.length,
+                            separatorBuilder: (context, index) => const Divider(),
+                            itemBuilder: (context, index) {
+                              final log = logs[index];
+                              final logType = log['log_type'] ?? 'Log';
+                              final value = log['value'] ?? 'N/A';
+                              final dateStr = DateTime.parse(log['created_at'])
+                                  .toLocal()
+                                  .toString()
+                                  .substring(5, 16); // e.g. "06-25 15:30"
+                              
+                              IconData typeIcon = Icons.stars_rounded;
+                              Color iconColor = Colors.blue;
+                              if (logType == 'Sugar') {
+                                typeIcon = Icons.health_and_safety_rounded;
+                                iconColor = Colors.red;
+                              } else if (logType == 'Meal') {
+                                typeIcon = Icons.restaurant_rounded;
+                                iconColor = Colors.orange;
+                              } else if (logType == 'Medicine') {
+                                typeIcon = Icons.medical_services_rounded;
+                                iconColor = Colors.purple;
+                              } else if (logType == 'Walk') {
+                                typeIcon = Icons.directions_walk_rounded;
+                                iconColor = Colors.green;
+                              } else if (logType == 'Water') {
+                                typeIcon = Icons.water_drop_rounded;
+                                iconColor = Colors.teal;
+                              }
+
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: iconColor.withOpacity(0.1),
+                                  child: Icon(typeIcon, color: iconColor),
+                                ),
+                                title: Text(
+                                  value,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(logType),
+                                trailing: Text(
+                                  dateStr,
+                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

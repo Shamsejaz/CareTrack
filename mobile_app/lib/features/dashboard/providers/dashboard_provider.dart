@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../profile/providers/profile_provider.dart';
 
 // Provides the dashboard data asynchronously from Supabase directly
 final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
@@ -8,6 +9,7 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   if (isDemo) {
     // Return realistic mock data for Demo Mode
     return {
+      'isCaregiver': false,
       'sugar': { 
           'lastReading': '105',
           'status': 'Normal'
@@ -39,6 +41,76 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   
   if (user == null) return {};
 
+  final profile = await ref.watch(profileProvider.future);
+  final isCaregiver = profile['role'] == 'caregiver';
+
+  if (isCaregiver) {
+    try {
+      // 1. Fetch care links
+      final linksResponse = await supabase
+          .from('care_links')
+          .select('patient_id')
+          .eq('caregiver_id', user.id);
+      
+      final List<String> patientIds = (linksResponse as List)
+          .map((e) => e['patient_id'].toString())
+          .toList();
+
+      if (patientIds.isEmpty) {
+        return {
+          'isCaregiver': true,
+          'patients': <Map<String, dynamic>>[],
+          'pendingAlerts': 0,
+        };
+      }
+
+      // 2. Fetch profiles of linked patients
+      final patientsResponse = await supabase
+          .from('profiles')
+          .select('*')
+          .inFilter('id', patientIds);
+          
+      final List<Map<String, dynamic>> patientProfiles = (patientsResponse as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+
+      // 3. Fetch count of pending alerts for these patients
+      final alertsResponse = await supabase
+          .from('notifications')
+          .select('id')
+          .eq('is_read', false)
+          .inFilter('patient_id', patientIds);
+          
+      final pendingAlertsCount = (alertsResponse as List).length;
+
+      // 4. Fetch latest health logs for each patient
+      final List<Map<String, dynamic>> patientsWithLogs = [];
+      for (var patient in patientProfiles) {
+        final latestLogRes = await supabase
+            .from('health_logs')
+            .select()
+            .eq('patient_id', patient['id'])
+            .order('created_at', ascending: false)
+            .limit(1)
+            .maybeSingle();
+
+        patientsWithLogs.add({
+          ...patient,
+          'latest_log': latestLogRes,
+        });
+      }
+
+      return {
+        'isCaregiver': true,
+        'patients': patientsWithLogs,
+        'pendingAlerts': pendingAlertsCount,
+      };
+    } catch (e) {
+      throw Exception('Failed to load caregiver dashboard data: $e');
+    }
+  }
+
+  // Patient user flow
   final startOfDay = DateTime.now().toUtc().subtract(Duration(
     hours: DateTime.now().hour,
     minutes: DateTime.now().minute,
@@ -72,6 +144,7 @@ final dashboardDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
         : null;
 
     return {
+      'isCaregiver': false,
       'sugar': { 
           'lastReading': latestSugar?['value'] ?? '--',
           'status': latestSugar?['intervention_alert']?['severity'] ?? 'Normal'

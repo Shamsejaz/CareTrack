@@ -17,38 +17,65 @@ export default function Alerts() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchAlerts = async () => {
+        let channel: any = null;
+
+        const fetchAlertsAndSubscribe = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                setLoading(false);
+                return;
+            }
+
+            // Fetch patient IDs linked to this caregiver
+            const { data: links } = await supabase
+                .from('care_links')
+                .select('patient_id')
+                .eq('caregiver_id', user.id);
+
+            const patientIds = links ? links.map(l => l.patient_id) : [];
+
+            if (patientIds.length === 0) {
+                setAlerts([]);
+                setLoading(false);
+                return;
+            }
+
             const { data } = await supabase
                 .from('notifications')
                 .select('*, profiles:patient_id(full_name)')
+                .in('patient_id', patientIds)
                 .order('created_at', { ascending: false });
 
             if (data) setAlerts(data);
             setLoading(false);
+
+            channel = supabase
+                .channel('notifications_page')
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'notifications' 
+                }, async (payload) => {
+                    if (patientIds.includes(payload.new.patient_id)) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('full_name')
+                            .eq('id', payload.new.patient_id)
+                            .single();
+
+                        const newAlert = { ...payload.new, profiles: profile } as Notification;
+                        setAlerts(prev => [newAlert, ...prev]);
+                    }
+                })
+                .subscribe();
         };
 
-        fetchAlerts();
-
-        const channel = supabase
-            .channel('notifications_page')
-            .on('postgres_changes', { 
-                event: 'INSERT', 
-                schema: 'public', 
-                table: 'notifications' 
-            }, async (payload) => {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('full_name')
-                    .eq('id', payload.new.patient_id)
-                    .single();
-
-                const newAlert = { ...payload.new, profiles: profile } as Notification;
-                setAlerts(prev => [newAlert, ...prev]);
-            })
-            .subscribe();
+        fetchAlertsAndSubscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            if (channel) {
+                supabase.removeChannel(channel);
+            }
         };
     }, []);
 

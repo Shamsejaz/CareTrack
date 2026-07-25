@@ -46,7 +46,7 @@ export const CommonService = {
     /**
      * Simulates prescription OCR and interaction checking.
      */
-    async processPrescription(patientId: string, imageUrl: string) {
+    async processPrescription(patientId: string, _imageUrl: string) {
         // In a real app, this would call an AI vision model
         // For now, we simulate the results
         const detectedMeds = [

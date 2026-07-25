@@ -18,17 +18,42 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchData = async () => {
+        let channel: any = null;
+
+        const fetchDataAndSubscribe = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                setLoading(false);
+                return;
+            }
+
+            // Fetch patient IDs linked to this caregiver
+            const { data: links } = await supabase
+                .from('care_links')
+                .select('patient_id')
+                .eq('caregiver_id', user.id);
+
+            const patientIds = links ? links.map(l => l.patient_id) : [];
+
+            if (patientIds.length === 0) {
+                setStats({ patients: 0, alerts: 0, compliance: '0%' });
+                setAlerts([]);
+                setLoading(false);
+                return;
+            }
+
             // 1. Fetch Stats
             const { count: patientCount } = await supabase
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
-                .eq('role', 'patient');
+                .eq('role', 'patient')
+                .in('id', patientIds);
 
             const { count: alertCount } = await supabase
                 .from('notifications')
                 .select('*', { count: 'exact', head: true })
-                .eq('is_read', false);
+                .eq('is_read', false)
+                .in('patient_id', patientIds);
 
             setStats(prev => ({ ...prev, patients: patientCount || 0, alerts: alertCount || 0 }));
 
@@ -36,38 +61,43 @@ export default function Dashboard() {
             const { data: alertData } = await supabase
                 .from('notifications')
                 .select('*, profiles:patient_id(full_name)')
+                .in('patient_id', patientIds)
                 .order('created_at', { ascending: false })
                 .limit(5);
 
             if (alertData) setAlerts(alertData);
             setLoading(false);
+
+            // 3. Realtime Alerts
+            channel = supabase
+                .channel('notifications_dashboard')
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'notifications' 
+                }, async (payload) => {
+                    if (patientIds.includes(payload.new.patient_id)) {
+                        // Get patient name for the new alert
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('full_name')
+                            .eq('id', payload.new.patient_id)
+                            .single();
+
+                        const newAlert = { ...payload.new, profiles: profile } as Notification;
+                        setAlerts(prev => [newAlert, ...prev.slice(0, 4)]);
+                        setStats(prev => ({ ...prev, alerts: prev.alerts + 1 }));
+                    }
+                })
+                .subscribe();
         };
 
-        fetchData();
-
-        // 3. Realtime Alerts
-        const channel = supabase
-            .channel('notifications_dashboard')
-            .on('postgres_changes', { 
-                event: 'INSERT', 
-                schema: 'public', 
-                table: 'notifications' 
-            }, async (payload) => {
-                // Get patient name for the new alert
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('full_name')
-                    .eq('id', payload.new.patient_id)
-                    .single();
-
-                const newAlert = { ...payload.new, profiles: profile } as Notification;
-                setAlerts(prev => [newAlert, ...prev.slice(0, 4)]);
-                setStats(prev => ({ ...prev, alerts: prev.alerts + 1 }));
-            })
-            .subscribe();
+        fetchDataAndSubscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            if (channel) {
+                supabase.removeChannel(channel);
+            }
         };
     }, []);
 

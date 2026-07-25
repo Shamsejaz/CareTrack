@@ -1,0 +1,17 @@
+# CareTrackAI
+
+> AI-powered health, memory, and care assistant that helps patients, elderly users, and families track medications, monitor health, and stay coordinated — worldwide.
+
+CareTrackAI combines medication reminders, glucose and vitals tracking, family coordination, and an AI assistant designed for low-tech-literacy users. Built to HIPAA, GDPR, and PDPL standards, available in English, Arabic, Urdu, Spanish and more.
+
+## Pages
+
+- [Home](/): Product overview, hero, and primary call to action.
+- [Features](/features): Medication reminders, AI assistant, family circle, glucose tracking, and more.
+- [How it works](/how-it-works): Step-by-step walkthrough of setting up and using CareTrackAI.
+- [Pricing](/pricing): Free, Premium, and Family plans with feature comparison and FAQ.
+- [For clinics](/clinics): B2B offering for clinics and hospitals.
+- [Trust & security](/trust): Security, privacy, and compliance posture (HIPAA, GDPR, PDPL).
+- [Blog](/blog): Articles on medication safety, caregiving, and chronic-condition management.
+- [Download](/download): Get the mobile app.
+- [Contact](/contact): Talk to the team, book a demo, or start a trial.

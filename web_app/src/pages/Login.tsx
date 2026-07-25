@@ -24,7 +24,15 @@ export default function Login() {
             if (error) throw error;
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Failed to login');
+            let message = err.message || 'Failed to login';
+            if (message.toLowerCase().includes('invalid login credentials') || message.toLowerCase().includes('invalid_credentials')) {
+                message = 'Incorrect email or password. Please verify and try again.';
+            } else if (message.toLowerCase().includes('email not confirmed')) {
+                message = 'Your email address is not verified yet. Please check your inbox.';
+            } else if (message.toLowerCase().includes('rate limit')) {
+                message = 'Too many login attempts. Please try again in a few minutes.';
+            }
+            setError(message);
         } finally {
             setLoading(false);
         }

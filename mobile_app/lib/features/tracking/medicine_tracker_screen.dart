@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/providers/auth_provider.dart';
+import '../../core/utils/error_handler.dart';
 
 class MedicineTrackerScreen extends ConsumerStatefulWidget {
   const MedicineTrackerScreen({super.key});
@@ -44,9 +45,7 @@ class _MedicineTrackerScreenState extends ConsumerState<MedicineTrackerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error logging medicine: $e')),
-        );
+        showErrorSnackBar(context, 'Error logging medicine', e);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -308,7 +307,7 @@ class _MedicineTrackerScreenState extends ConsumerState<MedicineTrackerScreen> {
           onPressed: _isSaving ? null : () async {
             final ImagePicker picker = ImagePicker();
             final XFile? photo = await picker.pickImage(
-              source: (!kIsWeb && Platform.isWindows) ? ImageSource.gallery : ImageSource.camera,
+              source: (kIsWeb || (!kIsWeb && Platform.isWindows)) ? ImageSource.gallery : ImageSource.camera,
               imageQuality: 50,
             );
             if (photo != null) {

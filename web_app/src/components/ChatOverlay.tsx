@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Send, X, MessageCircle } from 'lucide-react';
+import { Send, X } from 'lucide-react';
 
 interface ChatOverlayProps {
     patientId: string;

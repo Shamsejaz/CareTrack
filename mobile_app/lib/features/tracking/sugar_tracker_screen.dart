@@ -6,6 +6,7 @@ import '../dashboard/providers/dashboard_provider.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
 import '../../core/services/common_service.dart';
+import '../../core/utils/error_handler.dart';
 
 class SugarTrackerScreen extends ConsumerStatefulWidget {
   const SugarTrackerScreen({super.key});
@@ -77,9 +78,7 @@ class _SugarTrackerScreenState extends ConsumerState<SugarTrackerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving reading: $e')),
-        );
+        showErrorSnackBar(context, 'Error saving reading', e);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

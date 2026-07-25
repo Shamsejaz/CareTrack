@@ -11,6 +11,7 @@ import '../../core/providers/auth_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/services/ai_service.dart';
 import '../../core/services/common_service.dart';
+import '../../core/utils/error_handler.dart';
 
 class MealTrackerScreen extends ConsumerStatefulWidget {
   const MealTrackerScreen({super.key});
@@ -29,7 +30,7 @@ class _MealTrackerScreenState extends ConsumerState<MealTrackerScreen> {
 
   Future<void> _takePhoto() async {
     final XFile? photo = await _picker.pickImage(
-      source: (!kIsWeb && Platform.isWindows) ? ImageSource.gallery : ImageSource.camera,
+      source: (kIsWeb || (!kIsWeb && Platform.isWindows)) ? ImageSource.gallery : ImageSource.camera,
       imageQuality: 70,
     );
 
@@ -53,7 +54,8 @@ class _MealTrackerScreenState extends ConsumerState<MealTrackerScreen> {
     setState(() => _isAnalyzing = true);
     
     try {
-      final result = await AIService.analyzeMeal(photo.path);
+      final bytes = await photo.readAsBytes();
+      final result = await AIService.analyzeMeal(bytes);
       
       if (mounted) {
         setState(() {
@@ -71,9 +73,7 @@ class _MealTrackerScreenState extends ConsumerState<MealTrackerScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isAnalyzing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI Analysis failed: $e')),
-        );
+        showErrorSnackBar(context, 'AI Analysis failed', e);
       }
     }
   }
@@ -118,9 +118,7 @@ class _MealTrackerScreenState extends ConsumerState<MealTrackerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving meal: $e')),
-        );
+        showErrorSnackBar(context, 'Error saving meal', e);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
