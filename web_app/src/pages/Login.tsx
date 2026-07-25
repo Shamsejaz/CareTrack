@@ -2,23 +2,38 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { LogIn, ShieldAlert } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import DOMPurify from 'dompurify';
+
+const loginSchema = z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(1, 'Password is required'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+        resolver: zodResolver(loginSchema),
+    });
+
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [authError, setAuthError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const onSubmit = async (data: LoginFormValues) => {
         setLoading(true);
-        setError(null);
+        setAuthError(null);
 
         try {
+            // Sanitize input (defense in depth)
+            const cleanEmail = DOMPurify.sanitize(data.email);
+
             const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
+                email: cleanEmail,
+                password: data.password,
             });
 
             if (error) throw error;
@@ -32,7 +47,7 @@ export default function Login() {
             } else if (message.toLowerCase().includes('rate limit')) {
                 message = 'Too many login attempts. Please try again in a few minutes.';
             }
-            setError(message);
+            setAuthError(message);
         } finally {
             setLoading(false);
         }
@@ -49,11 +64,11 @@ export default function Login() {
                     <p>Access the caregiver dashboard to monitor your team.</p>
                 </div>
 
-                <form onSubmit={handleLogin} className="auth-form">
-                    {error && (
+                <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
+                    {authError && (
                         <div className="auth-error">
                             <ShieldAlert size={16} />
-                            <span>{error}</span>
+                            <span>{authError}</span>
                         </div>
                     )}
 
@@ -62,10 +77,10 @@ export default function Login() {
                         <input
                             type="email"
                             placeholder="doc@caretrackai.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
+                            {...register('email')}
+                            className={errors.email ? 'input-error' : ''}
                         />
+                        {errors.email && <span className="error-text">{errors.email.message}</span>}
                     </div>
 
                     <div className="form-group">
@@ -73,10 +88,10 @@ export default function Login() {
                         <input
                             type="password"
                             placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
+                            {...register('password')}
+                            className={errors.password ? 'input-error' : ''}
                         />
+                        {errors.password && <span className="error-text">{errors.password.message}</span>}
                     </div>
 
                     <button type="submit" className="auth-button" disabled={loading}>

@@ -44,7 +44,7 @@ function Home() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button asChild size="lg" className="rounded-full px-7 h-12">
-                <a href={import.meta.env.VITE_WEB_APP_URL ? `${import.meta.env.VITE_WEB_APP_URL}/signup` : "http://localhost:5173/signup"}>{t("hero.cta.start")} <ArrowRight className="ml-1 size-4" /></a>
+                <a href={import.meta.env.VITE_WEB_APP_URL ? `${import.meta.env.VITE_WEB_APP_URL}/signup` : "https://app.caretrackai.app/signup"}>{t("hero.cta.start")} <ArrowRight className="ml-1 size-4" /></a>
               </Button>
               <Button asChild variant="outline" size="lg" className="rounded-full px-7 h-12 bg-card">
                 <Link to="/how-it-works">{t("hero.cta.how")}</Link>

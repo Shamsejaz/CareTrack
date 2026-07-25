@@ -8,9 +8,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { createServerFn } from "@tanstack/react-start";
 import { Resend } from "resend";
+import { z } from "zod";
+
+const contactSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  role: z.string(),
+  message: z.string().min(10),
+  consent: z.literal(true)
+});
 
 const sendContactEmail = createServerFn({ method: "POST" })
-  .validator((data: { name: string; email: string; role: string; message: string }) => data)
+  .validator((data: unknown) => contactSchema.parse(data))
   .handler(async ({ data }) => {
     try {
       // In a real app, you would have a verified domain.
@@ -61,6 +70,7 @@ function ContactPage() {
       email: formData.get("email") as string,
       role: formData.get("role") as string,
       message: formData.get("message") as string,
+      consent: formData.get("consent") === "on",
     };
     
     const res = await sendContactEmail({ data });
@@ -118,6 +128,21 @@ function ContactPage() {
               <div>
                 <label htmlFor="contact-message" className="text-sm font-medium">How can we help?</label>
                 <Textarea id="contact-message" name="message" required className="mt-1.5 rounded-xl min-h-32" placeholder="Tell us a little about what you need…" />
+              </div>
+              
+              <div className="flex items-start gap-3 mt-4">
+                <input 
+                  type="checkbox" 
+                  id="consent" 
+                  name="consent" 
+                  required 
+                  className="mt-1"
+                />
+                <label htmlFor="consent" className="text-xs text-muted-foreground leading-relaxed">
+                  I explicitly consent to the processing of my personal data to receive a response to this inquiry, in accordance with the 
+                  <a href="https://app.caretrackai.app/privacy" target="_blank" rel="noopener noreferrer" className="underline"> Privacy Policy</a> 
+                  (required for GDPR/PDPL compliance).
+                </label>
               </div>
               <Button size="lg" className="rounded-full px-7 w-full sm:w-auto" disabled={loading}>
                 {loading ? "Sending..." : "Send message"}
