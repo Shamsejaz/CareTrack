@@ -538,6 +538,25 @@ button:disabled {
   max-width: 480px;
 }
 
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-left: 4px;
+}
+
 .auth-header h1 {
   font-weight: 800;
   color: var(--primary);
