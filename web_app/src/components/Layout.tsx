@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Activity, Users, Bell, LayoutDashboard, LogOut, CreditCard } from 'lucide-react';
+import { Users, Bell, LayoutDashboard, LogOut, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ChatOverlay from './ChatOverlay';
 
