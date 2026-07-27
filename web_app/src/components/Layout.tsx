@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Users, Bell, LayoutDashboard, LogOut, CreditCard } from 'lucide-react';
+import { Users, Bell, LayoutDashboard, LogOut, CreditCard, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ChatOverlay from './ChatOverlay';
 
@@ -45,6 +45,13 @@ export default function Layout() {
                     >
                         <Bell size={20} />
                         AI Alerts
+                    </NavLink>
+                    <NavLink
+                        to="/profile"
+                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                    >
+                        <User size={20} />
+                        Profile
                     </NavLink>
                     <NavLink
                         to="/billing"
