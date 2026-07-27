@@ -62,6 +62,8 @@ void main() async {
 
   // Initialize RevenueCat
   try {
+    // Commenting out dummy initialization to prevent InvalidCredentialsError
+    /*
     await Purchases.setLogLevel(LogLevel.debug);
     
     // Replace with your real API keys
@@ -79,6 +81,7 @@ void main() async {
     if (session != null) {
       await Purchases.logIn(session.user.id);
     }
+    */
   } catch (e) {
     debugPrint('RevenueCat initialization failed: $e');
   }

@@ -69,7 +69,7 @@ export default function Billing() {
       <div className="pricing-cards">
         <div className={`plan-card ${tier === 'free' ? 'active' : ''}`}>
           <h3>Free</h3>
-          <p className="price">$0 / month</p>
+          <p className="price">$0 <span>/ month</span></p>
           <ul>
             <li>Manual medicine tracking</li>
             <li>Basic reminders</li>
@@ -84,7 +84,7 @@ export default function Billing() {
 
         <div className={`plan-card ${tier === 'premium' ? 'active' : ''}`}>
           <h3>Premium</h3>
-          <p className="price">$9 / month</p>
+          <p className="price">$9 <span>/ month</span></p>
           <ul>
             <li>Prescription AI & OCR</li>
             <li>Smart adaptive reminders</li>
@@ -102,7 +102,7 @@ export default function Billing() {
 
         <div className={`plan-card ${tier === 'family' ? 'active' : ''}`}>
           <h3>Family</h3>
-          <p className="price">$19 / month</p>
+          <p className="price">$19 <span>/ month</span></p>
           <ul>
             <li>Everything in Premium</li>
             <li>Up to 5 users</li>

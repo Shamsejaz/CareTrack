@@ -20,8 +20,8 @@ export default function Layout() {
         <div className="app-container">
             <aside className="sidebar">
                 <div className="sidebar-logo">
-                    <Activity size={32} />
-                    CareTrack
+                    <img src="/logo.png" alt="CareTrackAI Logo" style={{ width: 32, height: 32 }} />
+                    CareTrackAI
                 </div>
 
                 <nav style={{ flex: 1 }}>

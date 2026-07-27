@@ -96,7 +96,7 @@ export default function Alerts() {
         <div>
             <h1 style={{ marginBottom: '8px' }}>Active AI Alerts</h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-                Real-time interventions escalated by the CareTrack AI system.
+                Real-time interventions escalated by the CareTrackAI system.
             </p>
 
             <div className="alerts-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
